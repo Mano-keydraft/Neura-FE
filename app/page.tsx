@@ -4,7 +4,7 @@ import AiChatBox from './AiChatBox';
 import NextLink from "next/link";
 import { Link as MuiLink } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 
 import {
@@ -25,15 +25,15 @@ import {
 
 import { Manrope } from "next/font/google";
 import { Inter } from "next/font/google";
+import { run } from 'node:test';
 
-<header />
 const navItems = [
-  { label: "Home", active: true },
-  { label: "About Us" },
-  { label: "Blogs" },
-  { label: "Case Studies" },
-  { label: "Who We Help" },
-  { label: "Contact Us" },
+  { label: "Home", href: "/home" },
+  { label: "About Us", href: "/about" },
+  { label: "Blogs", href: "/blog" },
+  { label: "Case Studies", href: "/case-studies" },
+  { label: "Who We Help", href: "/who-we-help" },
+  { label: "Contact Us", active: true, href: "/"},
 ];
 
 const textInputs = [
@@ -66,14 +66,115 @@ const faqs = [
   },
 ];
 
+// Memoized FAQ Item Component
+const FAQItem = React.memo(({ 
+  item, 
+  index, 
+  expanded, 
+  onToggle 
+}: { 
+  item: { q: string; a: string }; 
+  index: number; 
+  expanded: number | false; 
+  onToggle: (index: number) => void;
+}) => {
+  const isExpanded = expanded === index;
+  
+  const handleChange = useCallback((event: React.SyntheticEvent, isExpanded: boolean) => {
+    onToggle(isExpanded ? index : -1);
+  }, [index, onToggle]);
+
+  return (
+    <Accordion
+      expanded={isExpanded}
+      onChange={handleChange}
+      sx={{
+        backgroundColor: "#fff",
+        width: 500,
+        borderRadius: 1,
+        mb: 4,
+        "&::before": { display: "none" },
+        boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
+        transition: "all 0.2s ease-in-out",
+      }}
+    >
+      <AccordionSummary
+        sx={{
+          minHeight: 87,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          gap: 2,
+        }}
+      >
+        <Typography
+          sx={{
+            fontWeight: 500,
+            fontSize: isExpanded ? 24 : 32,
+            color: "#00A0EF",
+            display: "inline-block",
+            pl: 3,
+            transition: "font-size 0.2s ease-in-out",
+          }}
+        >
+          {isExpanded ? "−" : "+"}
+        </Typography>
+        
+        <Typography
+          sx={{
+            fontFamily: "var(--font-inter)",
+            fontSize: 16,
+            height: 40,
+            fontWeight: 600,
+            color: "#1B1139",
+            textAlign: "center",
+            width: "85%",
+            padding: 1.5,
+            margin: "0 auto",
+          }}
+        >
+          {item.q}
+        </Typography>
+      </AccordionSummary>
+      
+      <AccordionDetails 
+        sx={{ 
+          padding: 3, 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          height: 100, 
+          pt: 4,
+          pl: 11.5, 
+          pr: 8, 
+          pb: 10,
+        }}
+      >
+        <Typography 
+          sx={{ 
+            color: "#444", 
+            fontSize: 12.5, 
+            letterSpacing: 0.1, 
+            fontFamily: "inter",
+          }}
+        >
+          {item.a}
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
+  );
+});
+
+FAQItem.displayName = "FAQItem";
+
 export default function Home() {
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
 
   const [expanded, setExpanded] = useState<number | false>(0);
 
-  const handleChange = useCallback((panel: number) => (_: any, isExpanded: boolean) => {
-    setExpanded(isExpanded ? panel : false);
+  const handleToggle = useCallback((index: number) => {
+    setExpanded(index === -1 ? false : index);
   }, []);
 
   return (
@@ -148,21 +249,20 @@ export default function Home() {
                 backdropFilter: "blur(50px)",
               }}
             >
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href="#"
-                  style={{
-                    fontSize: 16,
-                    fontStyle: "dm-sans",
-                    fontWeight: item.active ? 700 : 500,
-                    color: item.active ? "#2F57FF" : "#3B4E75",
-                    textDecoration: "none",
-                  }}
-                >
-                  {item.label}
-                </Link>
-              ))}
+                      {navItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            style={{
+              fontSize: 16,
+              fontWeight: item.active ? 700 : 500,
+              color: item.active ? "#2F57FF" : "#3B4E75",
+              textDecoration: "none",
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
             </Stack>
 
             <Button
@@ -378,67 +478,13 @@ export default function Home() {
 
 <Box>
                     {faqs.map((item, index) => (
-                            <Accordion
-                            key={index}
-                            expanded={expanded === index}
-                            onChange={handleChange(index)}
-                            sx={{
-                              backgroundColor: "#fff",
-                              width: 500,
-                              borderRadius: 1,
-                              mb: 4,
-                              "&::before": { display: "none" },
-                              boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
-                            }}
-                          >
-                            <AccordionSummary
-                        sx={{
-                          minHeight: 87,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          gap: 2, // spacing between + and text
-                        }}
-                      >
-                        {/* + / − symbol */}
-                        <Typography
-                        sx={{
-                          fontWeight: 500,
-                          fontSize: expanded === index ? 24 : 32, // bigger for plus
-                          color: expanded === index ? "#00A0EF" : "#00A0EF", // blue for plus (can be same for minus)
-                          display: "inline-block",
-                          pl:3,  
-                        }}
-                      >
-                        {expanded === index ? "−" : "+"}
-                      </Typography>
-                      
-                      
-                        {/* Question text */}
-                        <Typography
-                          sx={{
-                            fontFamily: "var(--font-inter)",
-                          fontSize: 16,
-                          height:40,
-                          fontWeight: 600,
-                          color: "#1B1139",
-                          textAlign: "center",
-                          width: "85%",
-                          padding: 1.5,
-                          margin: "0 auto",
-                          }}
-                        >
-                          {item.q}
-                        </Typography>
-                      </AccordionSummary>
-                      
-                      
-                            <AccordionDetails sx={{ padding: 3, display: "flex", alignItems: "center", justifyContent: "center", height: 100, pt:4,pl:11.5, pr:8, pb:10,  }}> {/* ✅ padding increases content area */}
-                              <Typography sx={{ color: "#444", fontSize: 12.5, letterSpacing: 0.1, fontFamily: "inter", }}>
-                                {item.a}
-                              </Typography>
-                            </AccordionDetails>
-                          </Accordion>
+                      <FAQItem
+                        key={index}
+                        item={item}
+                        index={index}
+                        expanded={expanded}
+                        onToggle={handleToggle}
+                      />
                     ))}
                 </Box>
                 <AiChatBox />
@@ -585,7 +631,7 @@ export default function Home() {
 
         {/* Footer bottom */}
         <Box sx={{ mt: 47, textAlign: "left", color: "#999", fontSize: 12 }}>
-          Copyright © 2025 Winsipe RCM. All rights reserved
+          {/* Copyright © 2025 Winsipe RCM. All rights reserved */}
         </Box>
       </Box>
             
